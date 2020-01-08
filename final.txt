@@ -1,0 +1,166 @@
+%{
+    #include <stdio.h>
+    #include <string.h>
+    #include "Token.c"
+    #include "parse.c"
+    #include "SymbolTable.c"
+    #include "HashTable.c"
+%}
+digit ([0-9])
+int_num (0|[1-9]{digit}*)|{digit}
+real_num    0"."{digit}+|[1-9]{digit}*"."{digit}+
+val_up  "++"
+assignment  "="
+pointer_indecator   "^"
+addres  "&"
+id  ([a-zA-Z]+[0-9]*_{0,1}[a-zA-Z0-9]+(_{0,1}[a-zA-Z0-9]+)*)|[a-zA-Z]
+white_space [ \t]
+%%
+"--".*  ;
+\n  line++;
+{white_space}   ;
+{int_num}   {create_and_store_token(INTEGER_NUMBER, yytext, line); }
+{real_num}  {create_and_store_token(REAL_NUMBER, yytext, line); }
+"is"        {create_and_store_token(KEY_WORD_IS, yytext, line);}
+"block"     {create_and_store_token(KEY_WORD_BLOCK, yytext, line); }
+"begin"     {create_and_store_token(KEY_WORD_BEGIN, yytext, line); }
+"end"       {create_and_store_token(KEY_WORD_END, yytext, line); }
+"type"      {create_and_store_token(KEY_WORD_TYPE, yytext, line); }
+"integer"   {create_and_store_token(KEY_WORD_INTEGER, yytext, line);}
+"real"      {create_and_store_token(KEY_WORD_REAL, yytext, line); }
+"array"     {create_and_store_token(KEY_WORD_ARRAY, yytext, line); }
+"of"        {create_and_store_token(KEY_WORD_OF, yytext, line); }
+"when"      {create_and_store_token(KEY_WORD_WHEN, yytext, line); }
+"do"        {create_and_store_token(KEY_WORD_DO, yytext, line); }
+"default"   {create_and_store_token(KEY_WORD_DEFAULT, yytext, line); }
+"end_when"  {create_and_store_token(KEY_WORD_END_WHEN, yytext, line); }
+"for"       {create_and_store_token(KEY_WORD_FOR, yytext, line); }
+"end_for"   {create_and_store_token(KEY_WORD_END_FOR, yytext, line); }
+"malloc"    {create_and_store_token(KEY_WORD_MALLOC, yytext, line); }
+"size_of"   {create_and_store_token(KEY_WORD_SIZE_OF, yytext, line); }
+"free"      {create_and_store_token(KEY_WORD_FREE, yytext, line); }
+{id}        {create_and_store_token(TOKEN_ID, yytext, line);}
+"+"         {create_and_store_token(TOKEN_PLUS, yytext, line); }
+"-"         {create_and_store_token(TOKEN_MINUS, yytext, line); }
+"*"         {create_and_store_token(TOKEN_MULT, yytext, line); }
+"/"         {create_and_store_token(TOKEN_DIV, yytext, line); }
+"**"        {create_and_store_token(TOKEN_POWER, yytext, line); }
+{val_up}    {create_and_store_token(TOKEN_VAL_UP, yytext, line); }
+"=="        {create_and_store_token(TOKEN_IS_EQUAL, yytext, line); }
+">="        {create_and_store_token(TOKEN_BIG_EQUAL, yytext, line); }
+"<="        {create_and_store_token(TOKEN_LOW_EQUAL, yytext, line); }
+">"         {create_and_store_token(TOKEN_BIGGER, yytext, line); }
+"<"         {create_and_store_token(TOKEN_LOWER, yytext, line); }
+"!="        {create_and_store_token(TOKEN_INEQUAL, yytext, line); }
+{assignment}    {create_and_store_token(TOKEN_ASSIGNMENT, yytext, line); }
+{pointer_indecator} {create_and_store_token(TOKEN_POINTER_INDECATOR, yytext, line);}
+{addres}    {create_and_store_token(TOKEN_ADDRES, yytext, line);}
+","         {create_and_store_token(TOKEN_COMMA, yytext, line);}
+";"         {create_and_store_token(TOKEN_SEMICOLON, yytext, line);}
+"("         {create_and_store_token(TOKEN_R_BRACKETS_LEFT, yytext, line);}
+")"         {create_and_store_token(TOKEN_R_BRACKETS_RIGHT, yytext, line);}
+"["         {create_and_store_token(TOKEN_S_BRACKETS_LEFT, yytext, line);}
+"]"         {create_and_store_token(TOKEN_S_BRACKETS_RIGHT, yytext, line);}
+":"         {create_and_store_token(TOKEN_COLON, yytext, line);}
+.   {fprintf(yyout,"The character %s at line: %d does not begin any legal token in the language.\n",yytext,line);}
+<<EOF>>     {create_and_store_token(TOKEN_EOF,yytext, line);return 1;}
+%%
+int yywrap(){return 1;}
+void main(int argc, char* argv[])
+{
+    //FILE *semanticFile = fopen("test1_204098537_semantic.txt","w");
+    
+    FILE *semanticFile = fopen("//home//ubuntu//Documents//test1_204098537_semantic.txt","w");
+    
+    Node *head;     //will hold the head of the list - should be helpful
+    int i;          //index
+    currentIndex=0;     //will help to store tokens in the array of each Node at the lineked list
+    line=1;             //will help to know whats the line that the token called from
+    
+    
+    //yyin=fopen("test1.txt","r");
+    yyin=fopen("//home//ubuntu//Documents//test1.txt","r");
+    
+    //yyout=fopen("test1_204098537_lex.txt","w");
+    yyout=fopen("//home//ubuntu//Documents//test1_204098537_lex.txt","w");
+    
+    yylex();    //Start the lexical anilayzer
+    
+    //Revers the currentNode to point to the head of the list
+    while(currentNode->prev)
+        currentNode=currentNode->prev;
+        
+    head=currentNode;  //make the head - the head of the list
+    //Print all tokens into an output text file
+    while(currentNode)
+    {
+        for(i=0; i < currentNode->arrayLogicSize; i++)
+        {
+            if(currentNode->tokensArray[i].kind != TOKEN_EOF)
+            {
+                fprintf(yyout,"Token of kind {%s} was found at line: {%d}, lexeme:{%s} \n", getTokenNameByNum(currentNode->tokensArray[i].kind),currentNode->tokensArray[i].lineNumber, currentNode->tokensArray[i].lexeme);
+            }
+        }
+        currentNode=currentNode->next;
+    }
+    currentNode=head;
+    fclose(yyout); //close test1.lex
+    fclose(yyin); //close input file text
+    
+    //yyout=fopen("test1_204098537_syntactic.txt","w");
+    yyout=fopen("//home//ubuntu//Documents//test1_204098537_syntactic.txt","w");
+    
+    parser(semanticFile);
+    fclose(yyout); //close test1.synctactic
+    fclose(semanticFile); //close test1.semantic
+    currentNode=head;
+    freeList();  //free memory
+    
+    /************ SECONDE TEST *************/
+    
+    //semanticFile = fopen("test2_204098537_semantic.txt","w");
+
+    semanticFile = fopen("//home//ubuntu//Documents//test2_204098537_semantic.txt","w");
+   
+    currentIndex=0;     //will help to store tokens in the array of each Node at the lineked list
+    line=1;             //will help to know whats the line that the token called from
+    //yyin=fopen("test2.txt","r");
+    yyin=fopen("//home//ubuntu//Documents//test2.txt","r");
+    
+    //yyout=fopen("test2_204098537_lex.txt","w");
+    yyout=fopen("//home//ubuntu//Documents//test2_204098537_lex.txt","w");
+        
+    yylex();    //Start the lexical anilayzer
+    //Revers the currentNode to point to the head of the list
+    while(currentNode->prev)
+    {
+        currentNode=currentNode->prev;
+    }
+    head=currentNode;  //make the head - the head of the list
+    //Print all tokens into an output text file
+    while(currentNode)
+    {
+        for(i=0; i < currentNode->arrayLogicSize; i++)
+        {
+            if(currentNode->tokensArray[i].kind != TOKEN_EOF)
+            {
+                fprintf(yyout,"Token of kind {%s} was found at line: {%d}, lexeme:{%s} \n", getTokenNameByNum(currentNode->tokensArray[i].kind),currentNode->tokensArray[i].lineNumber, currentNode->tokensArray[i].lexeme);
+            }
+        }
+        currentNode=currentNode->next;
+    }
+    currentNode=head;
+    fclose(yyout); //close test2.lex
+    fclose(yyin); //close input file text
+    
+    //yyout=fopen("test2_204098537_syntactic.txt","w");
+    yyout=fopen("//home//ubuntu//Documents//test2_204098537_syntactic.txt","w");
+    
+    parser(semanticFile);
+    
+    fclose(yyout); //close test2.synctactic
+    fclose(semanticFile); //close test2.semantic
+    currentNode=head;
+    freeList();  //free memory
+     
+}

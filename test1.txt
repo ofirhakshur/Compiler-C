@@ -1,0 +1,77 @@
+block
+	type ptr is ^integer;
+	type int is integer;
+	type double is real;
+	type arr is array [10] of integer;
+	
+	index : integer;
+	i : int;                                    
+	int_var1 : int;
+	int_var2 : int;
+	int_var_double_declare : int;
+	int_var_double_declare : int;			--Error: duplicated declaration of int_var_double_declare
+	no_type_value : no_type;			--Error: type no_type is not defined
+	double2var : double;
+	pointer_var : ptr;
+	pointer_var2 : ptr;
+	arr_var : arr;
+	not_arr_var : int;
+begin
+	int_var1 = 2.2;					--Error: mismatch between types of the left and the right sides of the assignment 
+	int_var1 = int_var1 + 3.1;			--Error: mismatch between types of the left and the right sides of the assignment
+	int_var_not_decalared = 2;			--Error: variable int_var_not_decalared is not declared
+	double2var = 10.2;					-- Ok
+	double2var = 10;				--Error: mismatch between types of the left and the right sides of the assignment
+	pointer_var = &index;					-- Ok pointer_var is pointing to index (holding its address)
+	pointer_var = &int_var1;			--Error: mismatch between types of the left and the right sides of the assignment
+	pointer_var = int_var1;				--Error: mismatch between types of the left and the right sides of the assignment
+	pointer_var^ = int_var1;			--Error: mismatch between types of the left and the right sides of the assignment
+	pointer_var = pointer_var2;				-- Ok
+	int_var2 = pointer_var^;				-- Ok
+	int_var2 = int_var1^;				-- Error: variable int_var1 is not of a pointer type
+	double2var = pointer_var^;			-- Error: mismatch between types of the left and the right sides of the assignment
+	int_var1 = size_of(arr_var);			-- Error: arr_var is not a type name
+	arr_var = malloc(size_of(arr));			-- Error: assignment to array is forbidden
+	arr_var[int_var1/int_var2]=int_var1+int_var2*77;	-- OK, all expressions are integer 
+	arr_var[&int_var1] = 1;				-- Error: array index is not integer
+	not_arr_var[2] = 1;				-- Error: variable not_arr_var is not of an array type
+	ptr = pointer_var; 				-- Error: ptr is a type, not a variable
+	int_var1 = i + ptr^;				 -- Error: ptr is a type, not a variable
+	arr[5] = index;					-- Error: arr is a type, not a variable
+	int_var1 = arr_var + 1;				-- Error: can't apply arithmetic operation to variable of an array type
+	int_var1 = pointer_var + 1;			-- Error: can't apply arithmetic operation to variable of a pointer type
+
+
+     	block
+		double2var : int;					-- Ok, This is a new block, we can define a new local variable with a known name
+	begin
+		double2var = 33.3;					-- Error: in this scope, double2var is of type integer
+		pointer_var^ = &int_var1;		-- Error: mismatch between types of the left and the right sides of the assignment
+		pointer_var^ = pointer_var;		-- Error: mismatch between types of the left and the right sides of the assignment
+		i = i + pointer_var^;			-- Ok
+		block
+			int : integer;
+		begin
+			int = double2var + int_var1;	-- Ok
+			arr_var[size_of(ptr)] = 3;	-- Ok
+			arr_var[size_of(int)] = 1;	-- Error: int is a variable, not a type
+		end;
+	end;
+
+	for (i=0;i<=pointer_var^;i++)
+		arr_var[i] = int_var1**i;		-- Error: index of array must be ineger; can't be of a user-defined type
+	end_for;
+	
+	i = 0;
+	when (i!=10)
+		do
+			int_var1 = arr_var[i];		-- Error: index of array must be ineger; can't be of a user-defined type
+			arr_var[i] = int_var1 - 1;	-- Error: index of array must be ineger; can't be of a user-defined type			
+		default    int_var1 = 0;
+	end_when; --with condition i!=10
+
+	free(arr_value);				-- Error: arr_value is not declared
+
+
+end  -- some symbols that are illegal for tokens, but legal 
+     -- here:  % , $ , # , @, " , | , \ , '
